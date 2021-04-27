@@ -135,7 +135,7 @@ namespace ServersideSimulations_EpicLootPatch.Patches
                 return true;
             }
             string text = __instance.m_input.text;
-            if (text == "fixknown")
+            if (text == "spoilers")
             {
                 var toRemove = new List<string>() {
                     "$item_chest_pcuirass",
