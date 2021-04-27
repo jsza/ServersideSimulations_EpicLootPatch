@@ -17,11 +17,11 @@ namespace ServersideSimulations_EpicLootPatch.Patches
             {
                 new ILCursor(il)
                     /*var player = Player.m_localPlayer;
-					if (player == null)
-					{
-						//EpicLoot.LogWarning($"Tried to get gated itemID ({itemID}) with null player! Using itemID");
-						return itemID;
-					}*/
+                    if (player == null)
+                    {
+                        //EpicLoot.LogWarning($"Tried to get gated itemID ({itemID}) with null player! Using itemID");
+                        return itemID;
+                    }*/
                     .GotoNext(MoveType.AfterLabel,
                         i => i.MatchLdsfld<Player>("m_localPlayer"),
                         i => i.MatchStloc(0),
