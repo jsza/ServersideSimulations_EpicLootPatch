@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using EpicLoot.GatedItemType;
 using HarmonyLib;
 using MonoMod.Cil;
-using UnityEngine;
 
 namespace ServersideSimulations_EpicLootPatch.Patches
 {
@@ -46,29 +45,6 @@ namespace ServersideSimulations_EpicLootPatch.Patches
             }
 
             return true;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(EpicLoot.EpicLoot), nameof(EpicLoot.EpicLoot.TryRegisterItems))]
-        /* Remove null entries from piece tables so Epic Loot doesn't blow up.
-         * Slapdash fix for Basement
-         */
-        private static void Pre_EpicLoot_TryRegisterItems()
-        {
-            if (!ObjectDB.instance) return;
-
-            foreach (GameObject itemPrefab in ObjectDB.instance.m_items)
-            {
-                ItemDrop itemDrop = itemPrefab.GetComponent<ItemDrop>();
-
-                if (itemDrop == null) continue;
-
-                var item = itemDrop.m_itemData;
-                if (item != null && item.m_shared.m_buildPieces != null)
-                {
-                    item.m_shared.m_buildPieces.m_pieces.RemoveAll(piece => piece == null);
-                }
-            }
         }
 
         [HarmonyPostfix]
