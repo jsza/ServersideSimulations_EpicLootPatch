@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EpicLoot.GatedItemType;
 using HarmonyLib;
 using MonoMod.Cil;
+using OC = Mono.Cecil.Cil.OpCodes;
 
 namespace ServersideSimulations_EpicLootPatch.Patches
 {
@@ -12,6 +13,19 @@ namespace ServersideSimulations_EpicLootPatch.Patches
         [HarmonyPatch(typeof(GatedItemTypeHelper), nameof(GatedItemTypeHelper.GetGatedItemID), new Type[] { typeof(string), typeof(GatedItemTypeMode) })]
         private static class GatedItemTypeHelper_GetGatedItemID_Patch
         {
+            private static bool OverrideIsNullLocalPlayer(Player player)
+            {
+                if (ZNet.instance && ZNet.instance.IsDedicated())
+                {
+                    return false;
+                }
+                else
+                {
+                    return player == null;
+                }
+            }
+
+            // Remove `Player.m_localPlayer == null` check so we can proceed to `CheckIfItemNeedsGate`
             private static void ILManipulator(ILContext il)
             {
                 new ILCursor(il)
@@ -21,15 +35,22 @@ namespace ServersideSimulations_EpicLootPatch.Patches
                         //EpicLoot.LogWarning($"Tried to get gated itemID ({itemID}) with null player! Using itemID");
                         return itemID;
                     }*/
-                    .GotoNext(MoveType.AfterLabel,
+                    .GotoNext(MoveType.After,
                         i => i.MatchLdsfld<Player>("m_localPlayer"),
                         i => i.MatchStloc(0),
                         i => i.MatchLdloc(0),
                         i => i.MatchLdnull(),
                         i => i.MatchCall<UnityEngine.Object>("op_Equality"),
-                        i => i.MatchBrfalse(out _)
+                        i => i.MatchStloc(6),
+                        i => i.MatchLdloc(6)
                     )
-                    .RemoveRange(8)
+                    .GotoPrev(MoveType.After,
+                        i => i.MatchStloc(6)
+                    )
+                    .Remove()
+                    // player local
+                    .Emit(OC.Ldloc, 0)
+                    .EmitDelegate<Func<Player, bool>>(OverrideIsNullLocalPlayer);
                 ;
             }
         }
